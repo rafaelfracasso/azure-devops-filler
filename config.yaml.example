@@ -1,0 +1,46 @@
+azure_devops:
+  base_url: "${AZURE_DEVOPS_URL:-https://dev.azure.com}"
+  organization: "${AZURE_DEVOPS_ORG}"
+  default_project: "${AZURE_DEVOPS_PROJECT}"
+  default_area: "${AZURE_DEVOPS_AREA}"
+  default_iteration: "${AZURE_DEVOPS_ITERATION:-@CurrentIteration}"
+  author_email: "${AZURE_DEVOPS_EMAIL}"
+  assigned_to: "${AZURE_DEVOPS_ASSIGNED_TO}"
+  default_state: "Fechado"
+  # Agrupar tasks em User Stories mensais
+  create_monthly_user_stories: true
+  user_story_name: "${USER_FULL_NAME:-Seu Nome}"
+  # Enriquecer descrições das tasks com LLM
+  enhance_descriptions: false
+
+llm:
+  base_url: "${LLM_BASE_URL:-https://api.groq.com/openai/v1}"
+  model: "${LLM_MODEL:-llama-3.3-70b-versatile}"
+
+sources:
+  outlook:
+    enabled: true
+    type: "ics"
+    ics_path: "./data/calendar.ics"
+    mapping:
+      area_path: "AREA_DA_TASK"
+      tags: ["outlook"]
+
+  recurring:
+    enabled: true
+    templates:
+      - name: "Atividade Exemplo"
+        weekdays: [0, 1, 2, 3, 4]
+        hours: 0.5
+        area_path: "AREA_DA_TASK"
+        tags: ["recorrente"]
+
+  git:
+    enabled: true
+    repositories:
+      - name: "nome-do-repo"
+        area_path: "AREA_DA_TASK"
+        tags: ["git"]
+
+non_working_days:
+  - "2026-01-01"

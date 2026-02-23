@@ -1,0 +1,119 @@
+azure_devops:
+  base_url: "${AZURE_DEVOPS_URL:-https://dev.azure.com}"
+  organization: "${AZURE_DEVOPS_ORG}"
+  default_project: "${AZURE_DEVOPS_PROJECT}"
+  default_area: "${AZURE_DEVOPS_AREA}"
+  default_iteration: "${AZURE_DEVOPS_ITERATION:-@CurrentIteration}"
+  author_email: "${AZURE_DEVOPS_EMAIL}"
+  assigned_to: "${AZURE_DEVOPS_ASSIGNED_TO}"
+  default_state: "Fechado"
+  # Agrupar tasks em User Stories mensais
+  create_monthly_user_stories: true
+  user_story_name: "${USER_FULL_NAME:-Seu Nome}"
+  # Enriquecer descrições das tasks com LLM (requer seção llm configurada abaixo)
+  enhance_descriptions: true
+  llm_system_prompt: |
+    Você é um assistente que escreve descrições de tasks de desenvolvimento de software
+    em português brasileiro, de forma concisa e técnica.
+    Escreva um parágrafo curto (2-4 frases) descrevendo a atividade realizada.
+    Use linguagem formal e mencione o impacto ou objetivo da atividade quando possível.
+    Não repita o título. Não use marcadores ou listas.
+
+# LLM para enriquecer descrições das tasks (OpenAI-compatible API)
+llm:
+  base_url: "${LLM_BASE_URL:-https://api.groq.com/openai/v1}"
+  model: "${LLM_MODEL:-llama-3.3-70b-versatile}"
+
+sources:
+  outlook:
+    enabled: true
+    type: "ics"
+    ics_path: "./data/calendar.ics"
+    mapping:
+      area_path: "${AZURE_DEVOPS_AREA}"
+      tags:
+        - "outlook"
+        - "reunião"
+
+  recurring:
+    enabled: true
+    templates:
+      - name: "Verificação de carga - Hive"
+        weekdays: [0, 1, 2, 3, 4]  # seg-sex (0=segunda)
+        hours: 0.5
+        area_path: "${AZURE_DEVOPS_AREA}"
+        tags:
+          - "qlik"
+          - "monitoramento"
+      - name: "Verificação de carga - DW"
+        weekdays: [0, 1, 2, 3, 4]
+        hours: 0.5
+        area_path: "${AZURE_DEVOPS_AREA}"
+        tags:
+          - "qlik"
+          - "monitoramento"
+
+  git:
+    enabled: true
+    repositories:
+      - name: "arrecadacao-ai"
+        project: "${AZURE_DEVOPS_PROJECT}"
+        area_path: "${AZURE_DEVOPS_AREA}"
+        tags:
+          - "git"
+          - "desenvolvimento"
+
+# Dias sem expediente - Calendário Forense
+non_working_days:
+  # === RECESSO FORENSE 2025/2026 (20/12/2025 a 06/01/2026) ===
+  - "2025-12-20"
+  - "2025-12-21"
+  - "2025-12-22"
+  - "2025-12-23"
+  - "2025-12-24"
+  - "2025-12-25"  # Natal
+  - "2025-12-26"
+  - "2025-12-27"
+  - "2025-12-28"
+  - "2025-12-29"
+  - "2025-12-30"
+  - "2025-12-31"
+  - "2026-01-01"  # Confraternização Universal
+  - "2026-01-02"
+  - "2026-01-03"
+  - "2026-01-04"
+  - "2026-01-05"
+  - "2026-01-06"
+
+  # === FERIADOS NACIONAIS 2025 ===
+  - "2025-01-01"  # Confraternização Universal
+  - "2025-03-03"  # Ponto facultativo - Carnaval (segunda)
+  - "2025-03-04"  # Carnaval (terça)
+  - "2025-03-05"  # Quarta-feira de Cinzas
+  - "2025-04-18"  # Sexta-feira Santa
+  - "2025-04-21"  # Tiradentes
+  - "2025-05-01"  # Dia do Trabalho
+  - "2025-06-19"  # Corpus Christi
+  - "2025-09-07"  # Independência do Brasil
+  - "2025-10-12"  # Nossa Senhora Aparecida
+  - "2025-11-02"  # Finados
+  - "2025-11-15"  # Proclamação da República
+  - "2025-11-20"  # Dia da Consciência Negra
+  - "2025-12-08"  # Imaculada Conceição (feriado estadual MT)
+  - "2025-12-25"  # Natal
+
+  # === FERIADOS NACIONAIS 2026 ===
+  - "2026-02-16"  # Ponto facultativo - Carnaval (segunda)
+  - "2026-02-17"  # Carnaval (terça)
+  - "2026-02-18"  # Quarta-feira de Cinzas
+  - "2026-04-03"  # Sexta-feira Santa
+  - "2026-04-21"  # Tiradentes
+  - "2026-05-01"  # Dia do Trabalho
+  - "2026-06-04"  # Corpus Christi
+  - "2026-09-07"  # Independência do Brasil
+  - "2026-10-12"  # Nossa Senhora Aparecida
+  - "2026-11-02"  # Finados
+  - "2026-11-15"  # Proclamação da República
+  - "2026-11-20"  # Dia da Consciência Negra
+  - "2026-12-08"  # Imaculada Conceição (feriado estadual MT)
+  - "2026-12-25"  # Natal
