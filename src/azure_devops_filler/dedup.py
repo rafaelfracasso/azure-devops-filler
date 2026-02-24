@@ -233,6 +233,23 @@ class DedupManager:
         self._save()
         return count
 
+    def remove_by_task_id(self, task_id: int) -> bool:
+        """Remove um registro de processamento pelo ID da Task no Azure DevOps.
+
+        Args:
+            task_id: ID da Task no Azure DevOps
+
+        Returns:
+            True se o registro foi encontrado e removido
+        """
+        data = self._load()
+        for activity_hash, entry in list(data["processed"].items()):
+            if entry.get("task_id") == task_id:
+                del data["processed"][activity_hash]
+                self._save()
+                return True
+        return False
+
     def remove(self, activity_hash: str) -> bool:
         """Remove um registro de processamento.
 

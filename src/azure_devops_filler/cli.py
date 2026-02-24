@@ -799,5 +799,62 @@ def import_activities(
     console.print(f"  Ignoradas: {total_skipped}")
 
 
+@app.command()
+def delete(
+    work_item_ids: Annotated[
+        list[int],
+        typer.Argument(help="ID(s) do(s) work item(s) a deletar"),
+    ],
+    yes: Annotated[
+        bool,
+        typer.Option("--yes", "-y", help="Pula confirmação interativa"),
+    ] = False,
+    config_path: Annotated[
+        Optional[Path],
+        typer.Option("--config", "-c", help="Caminho do arquivo config.yaml"),
+    ] = None,
+) -> None:
+    """Deleta work items do Azure DevOps (soft delete — vão para a lixeira)."""
+    try:
+        settings = get_settings(config_path=config_path)
+    except FileNotFoundError as e:
+        console.print(f"[red]Erro:[/red] {e}")
+        raise typer.Exit(1)
+    except ValueError as e:
+        console.print(f"[red]Erro de configuração:[/red] {e}")
+        raise typer.Exit(1)
+
+    ids_str = ", ".join(f"#{i}" for i in work_item_ids)
+    console.print(f"[yellow]Work items a deletar:[/yellow] {ids_str}")
+    console.print("[dim]Os itens serão movidos para a lixeira e podem ser restaurados pela UI.[/dim]\n")
+
+    if not yes:
+        confirmed = typer.confirm("Confirmar exclusão?")
+        if not confirmed:
+            console.print("[dim]Operação cancelada.[/dim]")
+            raise typer.Exit(0)
+
+    config = settings.config
+    dedup = DedupManager()
+
+    async def delete_async():
+        async with AzureDevOpsClient(
+            organization=config.azure_devops.organization,
+            pat=settings.azure_devops_pat,
+            default_project=config.azure_devops.default_project,
+            base_url=config.azure_devops.base_url,
+        ) as client:
+            for work_item_id in work_item_ids:
+                try:
+                    await client.delete_work_item(work_item_id)
+                    removed_from_dedup = dedup.remove_by_task_id(work_item_id)
+                    dedup_note = " [dim](removido do dedup)[/dim]" if removed_from_dedup else ""
+                    console.print(f"  [green]✓[/green] #{work_item_id} deletado{dedup_note}")
+                except Exception as e:
+                    console.print(f"  [red]✗[/red] #{work_item_id} - Erro: {e}")
+
+    asyncio.run(delete_async())
+
+
 if __name__ == "__main__":
     app()

@@ -45,7 +45,7 @@ adf run --source git --date 2026-02-10
 adf run --config /path/para/outro-config.yaml
 ```
 
-**Saída:**
+**Saída (modo padrão):**
 
 ```
 📅 2026-02-10
@@ -66,8 +66,33 @@ Resumo:
   Ignoradas: 1
 ```
 
+**Saída (modo `create_monthly_user_stories: true`):**
+
+Quando habilitado no `config.yaml`, as Tasks são agrupadas por mês sob uma User Story:
+
+```
+📅 Fevereiro 2026
+
+  ✓ [US] Atividades Fevereiro 2026 - João Silva - US #500
+    ✓ Reunião de alinhamento (1.5h) - Task #1055
+    ⊘ Stand-up diário (já processada)
+    ✓ Verificação de carga - Hive (0.5h) - Task #1056
+    ✓ [arrecadacao-ai] fix: corrige cálculo (0.5h) - Task #1057
+
+📅 Janeiro 2026
+
+  ⊘ [US] Atividades Janeiro 2026 - João Silva - US #480 (já existe)
+    ✓ Reunião de planejamento (1.0h) - Task #1058
+
+Resumo:
+  Criadas: 4
+  Ignoradas: 1
+```
+
+A User Story do mês é criada uma única vez e reutilizada em execuções subsequentes.
+
 Símbolos:
-- `✓` Task criada com sucesso
+- `✓` Task ou User Story criada com sucesso
 - `⊘` Ignorada por deduplicação
 - `○` Dry-run (seria criada)
 - `✗` Erro ao criar
@@ -219,6 +244,53 @@ Resumo:
   Criadas: 82
   Ignoradas: 1
 ```
+
+---
+
+## `adf delete`
+
+Deleta um ou mais work items do Azure DevOps. Os itens são movidos para a **lixeira** (soft
+delete) e podem ser restaurados pela interface web. O registro de deduplicação também é
+removido, permitindo recriar a atividade se necessário.
+
+```bash
+adf delete ID [ID...] [OPÇÕES]
+```
+
+| Opção | Atalho | Padrão | Descrição |
+|-------|--------|--------|-----------|
+| `--yes` | `-y` | `false` | Pula a confirmação interativa |
+| `--config CAMINHO` | `-c` | `config.yaml` | Config alternativo |
+
+**Exemplos:**
+
+```bash
+# Deleta uma Task criada por engano
+adf delete 1042
+
+# Deleta múltiplas Tasks de uma vez
+adf delete 1042 1043 1044
+
+# Deleta sem confirmação interativa (útil em scripts)
+adf delete 1042 --yes
+```
+
+**Saída:**
+
+```
+Work items a deletar: #1042, #1043
+Os itens serão movidos para a lixeira e podem ser restaurados pela UI.
+
+Confirmar exclusão? [y/N]: y
+  ✓ #1042 deletado (removido do dedup)
+  ✓ #1043 deletado (removido do dedup)
+```
+
+> **Restaurar:** No Azure DevOps, acesse **Boards → Work Items → Recycle Bin** para
+> restaurar itens deletados.
+
+> **Permissão de admin:** Para exclusão permanente (`destroy`), é necessária permissão de
+> administrador do projeto. O `adf delete` sempre usa soft delete.
 
 ---
 

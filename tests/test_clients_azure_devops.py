@@ -348,6 +348,70 @@ class TestGetCommits:
             await client_no_project.get_commits("repo")
 
 
+class TestDeleteWorkItem:
+    async def test_sends_delete_request(self, client):
+        url = f"{BASE_URL}/{ORG}/{PROJECT}/_apis/wit/workitems/1001"
+
+        with respx.mock:
+            delete_route = respx.delete(url).mock(return_value=httpx.Response(200))
+            await client.delete_work_item(1001)
+
+        assert delete_route.called
+
+    async def test_uses_default_project_when_not_specified(self, client):
+        url = f"{BASE_URL}/{ORG}/{PROJECT}/_apis/wit/workitems/1001"
+
+        with respx.mock:
+            delete_route = respx.delete(url).mock(return_value=httpx.Response(200))
+            await client.delete_work_item(1001)
+
+        assert delete_route.called
+
+    async def test_uses_explicit_project_when_specified(self, client):
+        other_project = "other-project"
+        url = f"{BASE_URL}/{ORG}/{other_project}/_apis/wit/workitems/1001"
+
+        with respx.mock:
+            delete_route = respx.delete(url).mock(return_value=httpx.Response(200))
+            await client.delete_work_item(1001, project=other_project)
+
+        assert delete_route.called
+
+    async def test_raises_on_404(self, client):
+        url = f"{BASE_URL}/{ORG}/{PROJECT}/_apis/wit/workitems/9999"
+
+        with respx.mock:
+            respx.delete(url).mock(return_value=httpx.Response(404))
+            with pytest.raises(httpx.HTTPStatusError):
+                await client.delete_work_item(9999)
+
+    async def test_raises_on_403(self, client):
+        url = f"{BASE_URL}/{ORG}/{PROJECT}/_apis/wit/workitems/1001"
+
+        with respx.mock:
+            respx.delete(url).mock(return_value=httpx.Response(403))
+            with pytest.raises(httpx.HTTPStatusError):
+                await client.delete_work_item(1001)
+
+    async def test_raises_value_error_when_no_project(self):
+        client_no_project = AzureDevOpsClient(
+            organization=ORG, pat="test-pat", base_url=BASE_URL
+        )
+        with pytest.raises(ValueError, match="Projeto"):
+            await client_no_project.delete_work_item(1001)
+
+    async def test_does_not_use_destroy_flag(self, client):
+        """Soft delete: a URL não deve conter ?destroy=true."""
+        url = f"{BASE_URL}/{ORG}/{PROJECT}/_apis/wit/workitems/1001"
+
+        with respx.mock:
+            delete_route = respx.delete(url).mock(return_value=httpx.Response(200))
+            await client.delete_work_item(1001)
+
+        called_url = str(delete_route.calls[0].request.url)
+        assert "destroy" not in called_url
+
+
 class TestGetRepositories:
     async def test_returns_repository_list(self, client):
         url = f"{BASE_URL}/{ORG}/{PROJECT}/_apis/git/repositories"

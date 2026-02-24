@@ -167,6 +167,28 @@ salvo em `data/processed.json` após a criação.
 Rodando `adf run` duas vezes para a mesma data, a segunda execução ignora todas as
 atividades já processadas com a mensagem `⊘ título (já processada)`.
 
+## Agrupamento em User Stories mensais
+
+Quando `create_monthly_user_stories: true` está configurado em `azure_devops`, o `adf`
+altera o fluxo de criação:
+
+1. Coleta **todas** as atividades do período primeiro
+2. Agrupa por mês (ano + mês)
+3. Para cada mês, cria uma User Story com o título `"Atividades <Mês> <Ano>"` (ou
+   `"Atividades <Mês> <Ano> - <user_story_name>"` se `user_story_name` estiver configurado)
+4. Cria cada Task como filha da respectiva User Story via relação `Hierarchy-Reverse`
+
+User Stories já criadas são reutilizadas: o ID fica registrado em `data/processed.json`
+e execuções subsequentes vinculam novas Tasks ao mesmo item existente.
+
+```yaml
+azure_devops:
+  create_monthly_user_stories: true
+  user_story_name: "João Silva"  # opcional
+```
+
+Veja o exemplo de saída no modo User Story em [Referência CLI](cli.md#adf-run).
+
 ## See Also
 
 - [Configuração](configuration.md) — opções completas de cada fonte no config.yaml

@@ -26,6 +26,9 @@ adf run                   # cria as Tasks
 - **Dry-run** — Pré-visualize tudo antes de criar qualquer Task
 - **Export/Import** — Colete atividades sem PAT e importe depois quando disponível
 - **Non-working days** — Calendário de feriados e recesso para pular dias sem expediente
+- **User Stories mensais** — Agrupa Tasks sob uma User Story por mês automaticamente
+- **Aprimoramento via LLM** — Enriquece descrições das Tasks usando qualquer LLM OpenAI-compatible
+- **Delete** — Remove work items criados por engano (soft delete com remoção do dedup)
 
 ## Exemplo
 

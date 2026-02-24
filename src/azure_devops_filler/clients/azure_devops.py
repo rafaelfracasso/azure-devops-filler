@@ -269,6 +269,33 @@ class AzureDevOpsClient:
 
         return commits
 
+    async def delete_work_item(self, work_item_id: int, project: Optional[str] = None) -> None:
+        """Realiza soft delete de um work item (move para a lixeira).
+
+        O item pode ser restaurado pela interface web do Azure DevOps.
+        Para delete permanente (destroy), é necessária permissão de admin.
+
+        Args:
+            work_item_id: ID do work item a deletar
+            project: Projeto do work item (usa default se não especificado)
+
+        Raises:
+            ValueError: Se o projeto não foi especificado
+            httpx.HTTPStatusError: Se a requisição falhar
+        """
+        target_project = project or self.default_project
+        if not target_project:
+            raise ValueError("Projeto não especificado")
+
+        client = await self._get_client()
+        url = (
+            f"{self._base_url}/{self.organization}/{target_project}"
+            f"/_apis/wit/workitems/{work_item_id}?api-version={self.API_VERSION}"
+        )
+
+        response = await client.delete(url)
+        response.raise_for_status()
+
     async def get_repositories(self, project: Optional[str] = None) -> list[dict]:
         """Lista repositórios de um projeto.
 

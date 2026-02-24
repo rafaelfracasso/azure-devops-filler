@@ -17,6 +17,7 @@ A configuração é dividida em dois arquivos:
 | `GRAPH_TENANT_ID` | Não | Tenant ID (apenas para Outlook via Graph API) |
 | `GRAPH_CLIENT_ID` | Não | Client ID do App Registration no Azure AD |
 | `GRAPH_CLIENT_SECRET` | Não | Client Secret do App Registration |
+| `LLM_API_KEY` | Não | API key do LLM (padrão: `ollama`, para instâncias locais sem autenticação) |
 
 ```env
 # .env
@@ -26,6 +27,20 @@ AZURE_DEVOPS_PAT=seu_pat_aqui
 GRAPH_TENANT_ID=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 GRAPH_CLIENT_ID=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 GRAPH_CLIENT_SECRET=seu_client_secret
+
+# Apenas para aprimoramento de descrições via LLM:
+LLM_API_KEY=sua_api_key
+```
+
+### Expansão de variáveis de ambiente no config.yaml
+
+Qualquer valor no `config.yaml` pode referenciar variáveis de ambiente usando a sintaxe `${VAR_NAME}` ou `${VAR_NAME:-valor_padrão}`:
+
+```yaml
+azure_devops:
+  organization: "${AZURE_ORG}"
+  default_project: "${AZURE_PROJECT:-MeuProjeto}"
+  assigned_to: "${AZURE_ASSIGNED_TO}"
 ```
 
 ## config.yaml — Referência completa
@@ -34,14 +49,18 @@ GRAPH_CLIENT_SECRET=seu_client_secret
 
 ```yaml
 azure_devops:
-  base_url: "https://dev.azure.com"   # padrão; altere para servidores self-hosted
-  organization: "MinhaOrg"            # nome da organização
-  default_project: "MeuProjeto"       # projeto padrão para criar Tasks
-  default_area: "MeuProjeto"          # Area Path padrão (ex: "MeuProjeto\\SubÁrea")
+  base_url: "https://dev.azure.com"         # padrão; altere para servidores self-hosted
+  organization: "MinhaOrg"                  # nome da organização
+  default_project: "MeuProjeto"             # projeto padrão para criar Tasks
+  default_area: "MeuProjeto"                # Area Path padrão (ex: "MeuProjeto\\SubÁrea")
   default_iteration: "MeuProjeto\\Iteration 1"  # Sprint/Iteration padrão
-  author_email: "usuario@empresa.com" # e-mail usado para filtrar commits no Git
-  assigned_to: "DOMINIO\\matricula"   # (opcional) responsável padrão das Tasks
-  default_state: "Fechado"            # (opcional) estado inicial das Tasks criadas
+  author_email: "usuario@empresa.com"       # e-mail usado para filtrar commits no Git
+  assigned_to: "DOMINIO\\matricula"         # (opcional) responsável padrão das Tasks
+  default_state: "Fechado"                  # (opcional) estado inicial das Tasks criadas
+  create_monthly_user_stories: false        # (opcional) agrupa Tasks sob User Stories mensais
+  user_story_name: "Nome Exibido"           # (opcional) sufixo no título das User Stories
+  enhance_descriptions: false               # (opcional) aprimora descrições via LLM
+  llm_system_prompt: "Você é..."            # (opcional) prompt de sistema para o LLM
 ```
 
 | Campo | Obrigatório | Padrão | Descrição |
@@ -54,6 +73,10 @@ azure_devops:
 | `author_email` | Sim | — | E-mail do autor para filtrar commits |
 | `assigned_to` | Não | `null` | Responsável das Tasks (formato `DOMINIO\\usuario`) |
 | `default_state` | Não | `null` | Estado inicial das Tasks criadas |
+| `create_monthly_user_stories` | Não | `false` | Agrupa Tasks sob User Stories mensais |
+| `user_story_name` | Não | `null` | Sufixo no título das User Stories (ex: `"João Silva"` → `"Atividades Fevereiro 2026 - João Silva"`) |
+| `enhance_descriptions` | Não | `false` | Envia descrições ao LLM para aprimoramento antes de criar a Task |
+| `llm_system_prompt` | Não | `null` | Prompt de sistema enviado ao LLM para guiar o aprimoramento |
 
 > **Nota sobre `default_iteration`:** `@CurrentIteration` funciona apenas no Azure DevOps
 > cloud. Em servidores self-hosted, use o caminho explícito (ex: `"Projeto\\Iteration 3"`).
@@ -61,6 +84,29 @@ azure_devops:
 > **Nota sobre `default_state`:** O Azure DevOps não permite criar Tasks diretamente em
 > estados fechados. O `adf` usa dois passos: cria a Task com estado padrão e então atualiza
 > o estado em seguida.
+
+> **Nota sobre `create_monthly_user_stories`:** Quando habilitado, o `adf run` agrupa todas
+> as atividades do período por mês e cria uma User Story para cada mês (ex: `"Atividades
+> Fevereiro 2026"`), vinculando todas as Tasks como filhas. User Stories já existentes são
+> reutilizadas via deduplicação. Veja o exemplo de saída em [Referência CLI](cli.md).
+
+### Seção `llm` (opcional)
+
+Necessária apenas quando `enhance_descriptions: true`. Aceita qualquer endpoint compatível
+com a API OpenAI (Ollama local, LM Studio, OpenAI, etc.).
+
+```yaml
+llm:
+  base_url: "http://localhost:11434/v1"  # endpoint OpenAI-compatible
+  model: "llama3.1"                      # modelo a usar
+```
+
+| Campo | Obrigatório | Padrão | Descrição |
+|-------|-------------|--------|-----------|
+| `base_url` | Sim | — | URL do servidor LLM compatível com OpenAI |
+| `model` | Não | `llama3.1` | Nome do modelo |
+
+A autenticação usa `LLM_API_KEY` do `.env` (padrão: `ollama`, adequado para instâncias locais sem autenticação).
 
 ### Seção `sources.outlook`
 

@@ -250,3 +250,39 @@ class TestDedupManager:
         dedup.remove(h)
         dedup2 = DedupManager(storage_path=tmp_path / "processed.json")
         assert dedup2.is_processed(activity) is False
+
+    # --- remove_by_task_id ---
+
+    def test_remove_by_task_id_returns_true_when_found(self, dedup, activity):
+        dedup.mark_processed(activity, task_id=1001)
+        assert dedup.remove_by_task_id(1001) is True
+
+    def test_remove_by_task_id_removes_record(self, dedup, activity):
+        dedup.mark_processed(activity, task_id=1001)
+        dedup.remove_by_task_id(1001)
+        assert dedup.is_processed(activity) is False
+
+    def test_remove_by_task_id_returns_false_when_not_found(self, dedup):
+        assert dedup.remove_by_task_id(9999) is False
+
+    def test_remove_by_task_id_only_removes_matching_record(self, dedup):
+        a1 = Activity(title="A", source=SourceType.OUTLOOK, date=date(2026, 2, 19), hours=1.0)
+        a2 = Activity(title="B", source=SourceType.OUTLOOK, date=date(2026, 2, 20), hours=1.0)
+        dedup.mark_processed(a1, task_id=1001)
+        dedup.mark_processed(a2, task_id=1002)
+
+        dedup.remove_by_task_id(1001)
+
+        assert dedup.is_processed(a1) is False
+        assert dedup.is_processed(a2) is True
+
+    def test_remove_by_task_id_persists_to_file(self, dedup, activity, tmp_path):
+        dedup.mark_processed(activity, task_id=1001)
+        dedup.remove_by_task_id(1001)
+        dedup2 = DedupManager(storage_path=tmp_path / "processed.json")
+        assert dedup2.is_processed(activity) is False
+
+    def test_remove_by_task_id_returns_false_when_no_task_id_stored(self, dedup, activity):
+        """Atividade registrada sem task_id não deve ser encontrada por task_id."""
+        dedup.mark_processed(activity, task_id=None)
+        assert dedup.remove_by_task_id(1001) is False
