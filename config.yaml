@@ -57,7 +57,7 @@ sources:
     enabled: true
     repositories:
       - name: "arrecadacao-ai"
-        project: "${AZURE_DEVOPS_PROJECT}"
+        project: "Arrecadacao"
         area_path: "${AZURE_DEVOPS_AREA}"
         tags:
           - "git"

@@ -7,6 +7,7 @@ from datetime import date, timedelta
 from pathlib import Path
 from typing import Annotated, Literal, Optional
 
+import httpx
 import typer
 from rich.console import Console
 from rich.table import Table
@@ -162,6 +163,9 @@ async def process_activities(
                     dedup.mark_processed(activity, task_id=result.id, task_url=result.url)
                     console.print(f"  [green]✓[/green] {activity.title} ({activity.hours}h) - Task #{result.id}")
                     created += 1
+                except httpx.HTTPStatusError as e:
+                    detail = e.response.text[:300] if e.response.text else ""
+                    console.print(f"  [red]✗[/red] {activity.title} - Erro: {e} | {detail}")
                 except Exception as e:
                     console.print(f"  [red]✗[/red] {activity.title} - Erro: {e}")
 
@@ -233,6 +237,9 @@ async def process_activities_with_user_stories(
                     dedup.mark_user_story_processed(year, month, us_result.id, us_result.url)
                     user_story_id = us_result.id
                     console.print(f"  [green]✓[/green] [US] {us_title} - US #{us_result.id}")
+                except httpx.HTTPStatusError as e:
+                    detail = e.response.text[:300] if e.response.text else ""
+                    console.print(f"  [red]✗[/red] [US] {us_title} - Erro: {e} | {detail}")
                 except Exception as e:
                     console.print(f"  [red]✗[/red] [US] {us_title} - Erro: {e}")
 
@@ -272,6 +279,9 @@ async def process_activities_with_user_stories(
                         dedup.mark_processed(activity, task_id=result.id, task_url=result.url)
                         console.print(f"    [green]✓[/green] {activity.title} ({activity.hours}h) - Task #{result.id}")
                         created += 1
+                    except httpx.HTTPStatusError as e:
+                        detail = e.response.text[:300] if e.response.text else ""
+                        console.print(f"    [red]✗[/red] {activity.title} - Erro: {e} | {detail}")
                     except Exception as e:
                         console.print(f"    [red]✗[/red] {activity.title} - Erro: {e}")
 

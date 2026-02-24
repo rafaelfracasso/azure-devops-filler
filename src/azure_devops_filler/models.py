@@ -152,6 +152,7 @@ class TaskConfig:
             dt_str = self.activity_datetime.isoformat()
             operations.append({"op": "add", "path": "/fields/Microsoft.VSTS.Scheduling.StartDate", "value": dt_str})
             operations.append({"op": "add", "path": "/fields/Microsoft.VSTS.Scheduling.FinishDate", "value": dt_str})
+            operations.append({"op": "add", "path": "/fields/Custom.6efe7342-7546-4011-b66d-6eb1dfab8e46", "value": dt_str})
 
         return operations
 

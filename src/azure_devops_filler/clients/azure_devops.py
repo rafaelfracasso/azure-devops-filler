@@ -123,16 +123,17 @@ class AzureDevOpsClient:
 
         # Atualiza o estado separadamente (transição de estado não é permitida na criação)
         if task.state:
-            await client.patch(
+            r = await client.patch(
                 patch_url,
                 json=[{"op": "add", "path": "/fields/System.State", "value": task.state}],
                 headers={"Content-Type": "application/json-patch+json"},
             )
+            r.raise_for_status()
 
         # Vincula ao pai (User Story) via PATCH separado
         if task.parent_id:
             parent_url = f"{self._base_url}/{self.organization}/_apis/wit/workitems/{task.parent_id}"
-            await client.patch(
+            r = await client.patch(
                 patch_url,
                 json=[{
                     "op": "add",
@@ -144,6 +145,7 @@ class AzureDevOpsClient:
                 }],
                 headers={"Content-Type": "application/json-patch+json"},
             )
+            r.raise_for_status()
 
         return CreatedTask(
             id=task_id,
