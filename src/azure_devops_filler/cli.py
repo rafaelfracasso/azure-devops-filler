@@ -288,7 +288,16 @@ async def process_activities_with_user_stories(
     return created, skipped
 
 
-@app.command()
+@app.command(
+    epilog=(
+        "Exemplos:\n\n"
+        "  Hoje:            adf run\n\n"
+        "  Data específica: adf run --date 2026-02-27\n\n"
+        "  Período:         adf run --from 2026-02-25 --to 2026-02-27\n\n"
+        "  Simulação:       adf run --from 2026-02-25 --to 2026-02-27 --dry-run\n\n"
+        "  Fonte única:     adf run --date 2026-02-27 --source git"
+    )
+)
 def run(
     date_str: Annotated[
         Optional[str],
